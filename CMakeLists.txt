@@ -2,16 +2,21 @@ cmake_minimum_required(VERSION 3.0.2)
 project(obstacle_detection)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  cv_bridge
   roscpp
   rospy
   std_msgs
+  sensor_msgs
+  rosbag
 )
+
+find_package(OpenCV REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -103,9 +108,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES obstacle_detection
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+   INCLUDE_DIRS include
+   LIBRARIES obstacle_detection
+   CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
 
@@ -116,15 +121,18 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
+
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
 #   src/${PROJECT_NAME}/obstacle_detection.cpp
 # )
-
+add_library(obstacle_detector src/obstacle_detector.cpp)
+target_link_libraries(obstacle_detector ${catkin_LIBRARIES} ${OpenCV_LIBS})
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
@@ -134,6 +142,8 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/obstacle_detection_node.cpp)
+add_executable(process_ros_bag src/process_ros_bag.cpp)
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -149,6 +159,7 @@ include_directories(
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
+target_link_libraries(process_ros_bag ${OpenCV_LIBS} ${catkin_LIBRARIES} obstacle_detector)
 
 #############
 ## Install ##
