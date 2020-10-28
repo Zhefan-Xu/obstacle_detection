@@ -20,10 +20,11 @@ int main(int argcm, char** argv){
 		if (data != nullptr){
 			std::string encoding = data->encoding;
 			if (encoding == "16UC1"){
-				sensor_msgs::Image u_depth_map;
-				if (not stop){
-					od.calculate_u_depth_map(data, u_depth_map);
-					// stop = true;	
+				
+				if (count_depth_image == 120){
+					cv::Mat u_depth_map = od.calculate_u_depth_map(data);
+					std::vector<cv::Point> bboxes = od.detect_u_depth_map(u_depth_map);
+					stop = true;	
 				}
 				
 
