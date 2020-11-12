@@ -5,6 +5,7 @@
 #include <sensor_msgs/Image.h>
 
 using std::cout; using std::endl;
+cv::RNG rng(12345);
 
 int main(int argcm, char** argv){
 	obstacle_detector od;
@@ -21,10 +22,28 @@ int main(int argcm, char** argv){
 			std::string encoding = data->encoding;
 			if (encoding == "16UC1"){
 				
-				if (count_depth_image == 120){
+				// if (count_depth_image == 120){
+				if (true){	
 					cv::Mat u_depth_map = od.calculate_u_depth_map(data);
-					std::vector<cv::Point> bboxes = od.detect_u_depth_map(u_depth_map);
-					stop = true;	
+					cout << "image size: " << u_depth_map.rows << " x " << u_depth_map.cols << endl;
+					std::vector<cv::Rect> bboxes = od.detect_u_depth_map(u_depth_map);
+					// cv::Mat drawing = cv::Mat::zeros( u_depth_map.size(), CV_8UC3 );
+					// cv::imwrite("/home/zhefan/catkin_ws/src/obstacle_detection/test_image_data/u_depth_detection/detect_image.jpg", u_depth_map);
+
+					for (int i=0; i < bboxes.size(); ++i){
+						cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255));
+						cv::rectangle(u_depth_map, bboxes[i].tl(), bboxes[i].br(), color);
+						
+					}
+					std::string file_name = "/home/zhefan/catkin_ws/src/obstacle_detection/test_image_data/u_depth_detection/detect_image" + std::to_string(count_depth_image) +".jpg";
+					cv::imwrite(file_name, u_depth_map);
+					
+					// std::string windowName = "u depth map";
+
+					// cv::imshow(windowName, u_depth_map);
+					// cv::waitKey(0);
+
+					// stop = true;	
 				}
 				
 

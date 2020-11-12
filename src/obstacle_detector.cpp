@@ -3,7 +3,7 @@
 
 obstacle_detector::obstacle_detector(){
 	cout << "Initializing default Obstacle Detector!" << endl;
-	u_depth_res = 50; // res mm per bin
+	u_depth_res = 10; // res mm per bin
 	max_depth = 5000;
 	image_count = 0; // for saving image
 	cutoff_thresh = 0.3;
@@ -91,7 +91,7 @@ cv::Mat obstacle_detector::calculate_u_depth_map(const sensor_msgs::ImageConstPt
 	return u_depth_map;
 }
 
-std::vector<cv::Point>  obstacle_detector::detect_u_depth_map(const cv::Mat & u_depth_map){ 
+std::vector<cv::Rect>  obstacle_detector::detect_u_depth_map(const cv::Mat & u_depth_map){ 
 	cout << "Detecting U-depth Map..." << endl;
 	// Group Lines of Interests
 	double minVal, maxVal;
@@ -151,9 +151,10 @@ std::vector<cv::Point>  obstacle_detector::detect_u_depth_map(const cv::Mat & u_
 		}
 	}
 
-	for (cv::Point p: lines_of_interests){
-		cout << p << endl;
-	}
+	// print lines of interests
+	// for (cv::Point p: lines_of_interests){
+	// 	cout << p << endl;
+	// }
 
 	// Group Lines
 	
@@ -226,7 +227,53 @@ std::vector<cv::Point>  obstacle_detector::detect_u_depth_map(const cv::Mat & u_
 
 
 	cout << "total: " << count_group << endl;
-	std::vector<cv::Point> bboxes;
+	std::vector<cv::Rect> bboxes;
+
+ 	// Iterate through each group and find the bbox pixel: upper left and bottom right
+ 	for (std::set<int> group_indices: line_group_indices){
+ 		double upper_left_x = 1000000;
+ 		double upper_left_y = 1000000;
+ 		double bottom_right_x = 0;
+ 		double bottom_right_y = 0;
+ 		for (int index: group_indices){
+ 			cv::Point line_start_point = lines_of_interests[index*2];
+ 			cv::Point line_end_point = lines_of_interests[index*2+1];
+			
+			// Determine the bbox point: find smallest x and smallest y in the line group
+			// we only need to check the start
+			if (line_start_point.x < upper_left_x){
+				upper_left_x = line_start_point.x;
+			}
+
+			// For y
+			if (line_start_point.y < upper_left_y){
+				upper_left_y = line_start_point.y;
+			}
+
+			// Check the end for bottom right
+			if (line_end_point.x > bottom_right_x){
+				bottom_right_x = line_end_point.x;
+			}
+
+			// For y
+			if (line_end_point.y > bottom_right_y){
+				bottom_right_y = line_end_point.y;
+			}
+		}
+		cv::Point bbox_ul, bbox_br;
+		bbox_ul.x = upper_left_y;
+		bbox_ul.y = upper_left_x;
+		bbox_br.x = bottom_right_y;
+		bbox_br.y = bottom_right_x;
+		cout << bbox_ul << ", " << bbox_br << endl;
+		// flip ul and br
+		cv::Rect bbox (bbox_ul, bbox_br);
+		cout << bbox << endl;
+		bboxes.push_back(bbox);
+		// bboxes.push_back(bbox_ul);
+		// bboxes.push_back(bbox_br);
+ 	}
+
 
 	cout << "Finish Detecting U-depth Map!" << endl;
 	return bboxes;

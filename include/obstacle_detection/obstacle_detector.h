@@ -21,7 +21,7 @@ public:
 	obstacle_detector(double _u_depth_res, double _max_depth);
 	bool is_same_object_line(cv::Point l_s1, cv::Point l_e1, cv::Point l_s2, cv::Point l_e2);
 	cv::Mat calculate_u_depth_map(const sensor_msgs::ImageConstPtr &depth_image_msg);
-	std::vector<cv::Point>  detect_u_depth_map(const cv::Mat & u_depth_map);
+	std::vector<cv::Rect>  detect_u_depth_map(const cv::Mat & u_depth_map);
 
 };
 
